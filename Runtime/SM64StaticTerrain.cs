@@ -2,6 +2,7 @@
 
 namespace LibSM64
 {
+    [RequireComponent(typeof(MeshFilter))]
     public class SM64StaticTerrain : MonoBehaviour
     {
         [SerializeField] SM64TerrainType terrainType = SM64TerrainType.Grass;

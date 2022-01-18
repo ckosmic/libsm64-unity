@@ -44,8 +44,9 @@ namespace LibSM64
 
             foreach( var obj in GameObject.FindObjectsOfType<SM64StaticTerrain>())
             {
-                var mc = obj.GetComponent<MeshCollider>();
-                transformAndGetSurfaces( surfaces, mc.sharedMesh, obj.SurfaceType, obj.TerrainType, x => mc.transform.TransformPoint( x ));
+                Mesh objMesh = obj.GetComponent<MeshCollider>() != null ? obj.GetComponent<MeshCollider>().sharedMesh : obj.GetComponent<MeshFilter>().sharedMesh;
+                if (objMesh != null)
+                    transformAndGetSurfaces( surfaces, objMesh, obj.SurfaceType, obj.TerrainType, x => obj.transform.TransformPoint( x ));
             }
 
             return surfaces.ToArray();

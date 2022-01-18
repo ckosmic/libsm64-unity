@@ -3,6 +3,7 @@ using System.Linq;
 
 namespace LibSM64
 {
+    [RequireComponent(typeof(MeshFilter))]
     public class SM64DynamicTerrain : MonoBehaviour
     {
         [SerializeField] SM64TerrainType terrainType = SM64TerrainType.Grass;
@@ -35,9 +36,11 @@ namespace LibSM64
             _nextPosition = _position;
             _nextRotation = _rotation;
 
-            var mc = GetComponent<MeshCollider>();
-            var surfaces = Utils.GetSurfacesForMesh( transform.lossyScale, mc.sharedMesh, surfaceType, terrainType );
-            _surfaceObjectId = Interop.SurfaceObjectCreate( _position, _rotation, surfaces.ToArray() );
+            Mesh objMesh = GetComponent<MeshCollider>() != null ? GetComponent<MeshCollider>().sharedMesh : GetComponent<MeshFilter>().sharedMesh;
+            if (objMesh != null) {
+                var surfaces = Utils.GetSurfacesForMesh(transform.lossyScale, objMesh, surfaceType, terrainType);
+                _surfaceObjectId = Interop.SurfaceObjectCreate(_position, _rotation, surfaces.ToArray());
+            }
         }
 
         void OnDisable()
