@@ -36,8 +36,23 @@ namespace LibSM64
             _nextPosition = _position;
             _nextRotation = _rotation;
 
-            Mesh objMesh = GetComponent<MeshCollider>() != null ? GetComponent<MeshCollider>().sharedMesh : GetComponent<MeshFilter>().sharedMesh;
-            if (objMesh != null) {
+            Mesh objMesh = null;
+            if (GetComponent<MeshCollider>() != null)
+            {
+                objMesh = GetComponent<MeshCollider>().sharedMesh;
+            }
+            else if (GetComponent<BoxCollider>() != null)
+            {
+                if (Utils._unityCubeMesh == null)
+                    Utils._unityCubeMesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
+                objMesh = Utils._unityCubeMesh;
+            }
+            else
+            {
+                objMesh = GetComponent<MeshFilter>().sharedMesh;
+            }
+            if (objMesh != null) 
+            {
                 var surfaces = Utils.GetSurfacesForMesh(transform.lossyScale, objMesh, surfaceType, terrainType);
                 _surfaceObjectId = Interop.SurfaceObjectCreate(_position, _rotation, surfaces.ToArray());
             }

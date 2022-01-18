@@ -7,6 +7,8 @@ namespace LibSM64
 {
     static internal class Utils
     {
+        internal static Mesh _unityCubeMesh = null;
+
         static void transformAndGetSurfaces( List<Interop.SM64Surface> outSurfaces, Mesh mesh, SM64SurfaceType surfaceType, SM64TerrainType terrainType, Func<Vector3,Vector3> transformFunc )
         {
             var tris = mesh.GetTriangles(0);
@@ -44,7 +46,21 @@ namespace LibSM64
 
             foreach( var obj in GameObject.FindObjectsOfType<SM64StaticTerrain>())
             {
-                Mesh objMesh = obj.GetComponent<MeshCollider>() != null ? obj.GetComponent<MeshCollider>().sharedMesh : obj.GetComponent<MeshFilter>().sharedMesh;
+                Mesh objMesh = null;
+                if (obj.GetComponent<MeshCollider>() != null)
+                {
+                    objMesh = obj.GetComponent<MeshCollider>().sharedMesh;
+                }
+                else if (obj.GetComponent<BoxCollider>() != null)
+                {
+                    if (_unityCubeMesh == null)
+                        _unityCubeMesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
+                    objMesh = _unityCubeMesh;
+                }
+                else
+                {
+                    objMesh = obj.GetComponent<MeshFilter>().sharedMesh;
+                }
                 if (objMesh != null)
                     transformAndGetSurfaces( surfaces, objMesh, obj.SurfaceType, obj.TerrainType, x => obj.transform.TransformPoint( x ));
             }
