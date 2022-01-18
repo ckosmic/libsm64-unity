@@ -13,7 +13,7 @@ namespace LibSM64
 
         void Awake()
         {
-            Interop.GlobalInit( File.ReadAllBytes( Application.dataPath + "/../baserom.us.z64" ));
+            Initialize();
             RefreshStaticTerrain();
         }
 
@@ -39,6 +39,16 @@ namespace LibSM64
         {
             Interop.GlobalTerminate();
             s_instance = null;
+        }
+
+        static public void Initialize()
+        {
+            Interop.GlobalInit(File.ReadAllBytes(Application.dataPath + "/../baserom.us.z64"));
+        }
+
+        static public void Initialize(string romPath)
+        {
+            Interop.GlobalInit(File.ReadAllBytes(romPath));
         }
 
         static void ensureInstanceExists()
