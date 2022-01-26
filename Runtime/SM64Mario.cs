@@ -142,6 +142,8 @@ namespace LibSM64
                 }
                 positionBuffers[buffIndex].CopyTo(positionBuffers[1 - buffIndex], 0);
                 normalBuffers[buffIndex].CopyTo(normalBuffers[1 - buffIndex], 0);
+                positionBuffers[buffIndex].CopyTo(lerpPositionBuffer, 0);
+                normalBuffers[buffIndex].CopyTo(lerpNormalBuffer, 0);
 
                 previousNumTrianglesUsed = numTrianglesUsed;
             }
