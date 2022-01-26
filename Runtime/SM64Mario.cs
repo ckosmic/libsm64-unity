@@ -26,7 +26,7 @@ namespace LibSM64
         uint marioId;
 
         private Vector3 previousVelocity;
-        private ushort previousNumTrianglesUsed;
+        private ushort previousNumTrianglesUsed = 0;
 
         public Action MarioStartedMoving;
         public Action MarioStoppedMoving;
@@ -135,10 +135,16 @@ namespace LibSM64
 
             if (previousNumTrianglesUsed != numTrianglesUsed)
             {
-                lerpPositionBuffer = new Vector3[3 * Interop.SM64_GEO_MAX_TRIANGLES];
-                lerpNormalBuffer = new Vector3[3 * Interop.SM64_GEO_MAX_TRIANGLES];
+                for (int i = numTrianglesUsed * 3; i < positionBuffers[buffIndex].Length; i++)
+                {
+                    positionBuffers[buffIndex][i] = Vector3.zero;
+                    normalBuffers[buffIndex][i] = Vector3.zero;
+                }
+                positionBuffers[buffIndex].CopyTo(positionBuffers[1 - buffIndex], 0);
+                normalBuffers[buffIndex].CopyTo(normalBuffers[1 - buffIndex], 0);
+
+                previousNumTrianglesUsed = numTrianglesUsed;
             }
-            previousNumTrianglesUsed = numTrianglesUsed;
 
             for ( int i = 0; i < colorBuffer.Length; ++i )
                 colorBufferColors[i] = new Color( colorBuffer[i].x, colorBuffer[i].y, colorBuffer[i].z, 1 );
@@ -156,8 +162,8 @@ namespace LibSM64
 
             for( int i = 0; i < numTrianglesUsed * 3; ++i )
             {
-                lerpPositionBuffer[i] = Vector3.LerpUnclamped( positionBuffers[buffIndex][i], positionBuffers[j][i], t);
-                lerpNormalBuffer[i] = Vector3.LerpUnclamped( normalBuffers[buffIndex][i], normalBuffers[j][i], t);
+                lerpPositionBuffer[i] = Vector3.LerpUnclamped(positionBuffers[buffIndex][i], positionBuffers[j][i], t);
+                lerpNormalBuffer[i] = Vector3.LerpUnclamped(normalBuffers[buffIndex][i], normalBuffers[j][i], t);
             }
 
             transform.position = Vector3.LerpUnclamped( states[buffIndex].unityPosition, states[j].unityPosition, t );
