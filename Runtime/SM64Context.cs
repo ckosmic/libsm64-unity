@@ -37,8 +37,7 @@ namespace LibSM64
 
         void OnApplicationQuit()
         {
-            Interop.GlobalTerminate();
-            s_instance = null;
+            Terminate();
         }
 
         static public void Initialize()
@@ -49,6 +48,15 @@ namespace LibSM64
         static public void Initialize(string romPath)
         {
             Interop.GlobalInit(File.ReadAllBytes(romPath));
+        }
+
+        static public void Terminate() {
+            Interop.GlobalTerminate();
+            s_instance = null;
+        }
+
+        static public void SetScaleFactor(float scale) {
+            Interop.SCALE_FACTOR = scale * 100.0f;
         }
 
         static void ensureInstanceExists()

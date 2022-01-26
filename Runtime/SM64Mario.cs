@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using UnityEngine;
 
 namespace LibSM64
@@ -23,12 +24,18 @@ namespace LibSM64
         Mesh marioMesh;
         uint marioId;
 
-        void OnEnable()
+        private Vector3 previousVelocity;
+
+        public Action MarioStartedMoving;
+        public Action MarioStoppedMoving;
+
+        public void Initialize()
         {
             SM64Context.RegisterMario( this );
 
             var initPos = transform.position;
-            marioId = Interop.MarioCreate( new Vector3( -initPos.x, initPos.y, initPos.z ) * Interop.SCALE_FACTOR );
+            var initRot = transform.eulerAngles;
+            marioId = Interop.MarioCreate( new Vector3( -initPos.x, initPos.y, initPos.z ) * Interop.SCALE_FACTOR, initRot );
 
             inputProvider = GetComponent<SM64InputProvider>();
             if( inputProvider == null )
@@ -65,7 +72,7 @@ namespace LibSM64
             meshFilter.sharedMesh = marioMesh;
         }
 
-        void OnDisable()
+        public void Terminate()
         {
             if( marioRendererObject != null )
             {
@@ -78,6 +85,31 @@ namespace LibSM64
                 SM64Context.UnregisterMario( this );
                 Interop.MarioDelete( marioId );
             }
+        }
+
+        public void SetAction(SM64MarioAction action)
+        {
+            Interop.MarioSetAction(action);
+        }
+
+        public void SetPosition(Vector3 position)
+        {
+            Interop.MarioSetPosition(position);
+        }
+
+        public void SetRotation(Quaternion rotation)
+        {
+            Interop.MarioSetRotation(rotation);
+        }
+
+        public void SetVelocity(Vector3 velocity)
+        {
+            Interop.MarioSetVelocity(velocity);
+        }
+
+        public void SetFowardVelocity(float velocity)
+        {
+            Interop.MarioSetForwardVelocity(velocity);
         }
 
         public void contextFixedUpdate()
@@ -99,7 +131,7 @@ namespace LibSM64
 
             states[buffIndex] = Interop.MarioTick( marioId, inputs, positionBuffers[buffIndex], normalBuffers[buffIndex], colorBuffer, uvBuffer );
 
-            for( int i = 0; i < colorBuffer.Length; ++i )
+            for ( int i = 0; i < colorBuffer.Length; ++i )
                 colorBufferColors[i] = new Color( colorBuffer[i].x, colorBuffer[i].y, colorBuffer[i].z, 1 );
 
             marioMesh.colors = colorBufferColors;
@@ -115,17 +147,32 @@ namespace LibSM64
 
             for( int i = 0; i < lerpPositionBuffer.Length; ++i )
             {
-                lerpPositionBuffer[i] = Vector3.LerpUnclamped( positionBuffers[buffIndex][i], positionBuffers[j][i], t );
-                lerpNormalBuffer[i] = Vector3.LerpUnclamped( normalBuffers[buffIndex][i], normalBuffers[j][i], t );
+                lerpPositionBuffer[i] = Vector3.LerpUnclamped( positionBuffers[buffIndex][i], positionBuffers[j][i], t);
+                lerpNormalBuffer[i] = Vector3.LerpUnclamped( normalBuffers[buffIndex][i], normalBuffers[j][i], t);
             }
 
             transform.position = Vector3.LerpUnclamped( states[buffIndex].unityPosition, states[j].unityPosition, t );
+            transform.rotation = Quaternion.Euler(0f, 360f - states[buffIndex].faceAngle * Mathf.Rad2Deg, 0f);
 
             marioMesh.vertices = lerpPositionBuffer;
             marioMesh.normals = lerpNormalBuffer;
 
             marioMesh.RecalculateBounds();
             marioMesh.RecalculateTangents();
+
+            Vector3 velocity = SM64Vec3ToVector3(states[buffIndex].velocity);
+            if (MarioStartedMoving != null && previousVelocity.magnitude == 0 && velocity.magnitude > 0)
+                MarioStartedMoving.Invoke();
+            else if (MarioStoppedMoving != null && velocity.magnitude == 0 && previousVelocity.magnitude > 0)
+                MarioStoppedMoving.Invoke();
+            previousVelocity = velocity;
+        }
+
+        private Vector3 SM64Vec3ToVector3(float[] sm64Vec)
+        {
+            if(sm64Vec != null && sm64Vec.Length >= 3)
+                return new Vector3(sm64Vec[0], sm64Vec[1], sm64Vec[2]);
+            return Vector3.zero;
         }
 
         void OnDrawGizmos()

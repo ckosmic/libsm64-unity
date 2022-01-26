@@ -6,13 +6,15 @@ namespace LibSM64
 {
     internal static class Interop
     {
-        public const float SCALE_FACTOR = 100.0f;
+        public static float SCALE_FACTOR = 100.0f;
 
         public const int SM64_TEXTURE_WIDTH  = 64 * 11;
         public const int SM64_TEXTURE_HEIGHT = 64;
         public const int SM64_GEO_MAX_TRIANGLES = 1024;
 
         public const int SM64_MAX_HEALTH = 8;
+
+        public const float SM64_DEG2ANGLE = 182.04459f;
 
         [StructLayout(LayoutKind.Sequential)]
         public struct SM64Surface
@@ -114,11 +116,22 @@ namespace LibSM64
         static extern void sm64_static_surfaces_load( SM64Surface[] surfaces, ulong numSurfaces );
 
         [DllImport("sm64")]
-        static extern uint sm64_mario_create( short marioX, short marioY, short marioZ );
+        static extern uint sm64_mario_create( short marioX, short marioY, short marioZ, short marioRx, short marioRy, short marioRz);
         [DllImport("sm64")]
         static extern void sm64_mario_tick( uint marioId, ref SM64MarioInputs inputs, ref SM64MarioState outState, ref SM64MarioGeometryBuffers outBuffers );
         [DllImport("sm64")]
         static extern void sm64_mario_delete( uint marioId );
+
+        [DllImport("sm64")]
+        static extern void sm64_set_mario_action(uint action);
+        [DllImport("sm64")]
+        static extern void sm64_set_mario_position(float marioX, float marioY, float marioZ);
+        [DllImport("sm64")]
+        static extern void sm64_set_mario_angle(short marioX, short marioY, short marioZ);
+        [DllImport("sm64")]
+        static extern void sm64_set_mario_velocity(float velX, float velY, float velZ);
+        [DllImport("sm64")]
+        static extern void sm64_set_mario_forward_velocity(float vel);
 
         [DllImport("sm64")]
         static extern uint sm64_surface_object_create( ref SM64SurfaceObject surfaceObject );
@@ -173,9 +186,12 @@ namespace LibSM64
 
         public static void GlobalTerminate()
         {
-            sm64_global_terminate();
-            marioTexture = null;
-            isGlobalInit = false;
+            if (isGlobalInit)
+            {
+                sm64_global_terminate();
+                marioTexture = null;
+                isGlobalInit = false;
+            }
         }
 
         public static void StaticSurfacesLoad( SM64Surface[] surfaces )
@@ -183,9 +199,10 @@ namespace LibSM64
             sm64_static_surfaces_load( surfaces, (ulong)surfaces.Length );
         }
 
-        public static uint MarioCreate( Vector3 marioPos )
+        public static uint MarioCreate( Vector3 marioPos, Vector3 marioEulerAngles )
         {
-            return sm64_mario_create( (short)marioPos.x, (short)marioPos.y, (short)marioPos.z );
+            marioEulerAngles = new Vector3(marioEulerAngles.x, 360 - marioEulerAngles.y, marioEulerAngles.z) * SM64_DEG2ANGLE;
+            return sm64_mario_create( (short)marioPos.x, (short)marioPos.y, (short)marioPos.z, (short)marioEulerAngles.x, (short)marioEulerAngles.y, (short)marioEulerAngles.z );
         }
 
         public static SM64MarioState MarioTick( uint marioId, SM64MarioInputs inputs, Vector3[] positionBuffer, Vector3[] normalBuffer, Vector3[] colorBuffer, Vector2[] uvBuffer )
@@ -218,6 +235,37 @@ namespace LibSM64
         public static void MarioDelete( uint marioId )
         {
             sm64_mario_delete( marioId );
+        }
+
+        public static void MarioSetAction(SM64MarioAction action)
+        {
+            sm64_set_mario_action((uint)action);
+        }
+
+        public static void MarioSetPosition(Vector3 position)
+        {
+            position *= SCALE_FACTOR;
+            sm64_set_mario_position(-position.x, position.y, position.z);
+        }
+
+        public static void MarioSetRotation(Quaternion rotation)
+        {
+            Vector3 eulerAngles = rotation.eulerAngles;
+            eulerAngles = new Vector3(eulerAngles.x, 360 - eulerAngles.y, eulerAngles.z);
+            eulerAngles *= SM64_DEG2ANGLE;
+            sm64_set_mario_angle((short)eulerAngles.x, (short)eulerAngles.y, (short)eulerAngles.z);
+        }
+
+        public static void MarioSetVelocity(Vector3 velocity)
+        {
+            velocity *= SCALE_FACTOR;
+            sm64_set_mario_velocity(velocity.x, velocity.y, velocity.z);
+        }
+
+        public static void MarioSetForwardVelocity(float velocity)
+        {
+            velocity *= SCALE_FACTOR;
+            sm64_set_mario_forward_velocity(velocity);
         }
 
         public static uint SurfaceObjectCreate( Vector3 position, Quaternion rotation, SM64Surface[] surfaces )
