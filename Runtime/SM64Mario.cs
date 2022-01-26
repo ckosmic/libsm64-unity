@@ -17,6 +17,7 @@ namespace LibSM64
         Vector3[] colorBuffer;
         Color[] colorBufferColors;
         Vector2[] uvBuffer;
+        ushort numTrianglesUsed;
         int buffIndex;
         Interop.SM64MarioState[] states;
 
@@ -25,6 +26,7 @@ namespace LibSM64
         uint marioId;
 
         private Vector3 previousVelocity;
+        private ushort previousNumTrianglesUsed;
 
         public Action MarioStartedMoving;
         public Action MarioStoppedMoving;
@@ -129,7 +131,14 @@ namespace LibSM64
             inputs.buttonB = inputProvider.GetButtonHeld( SM64InputProvider.Button.Kick  ) ? (byte)1 : (byte)0;
             inputs.buttonZ = inputProvider.GetButtonHeld( SM64InputProvider.Button.Stomp ) ? (byte)1 : (byte)0;
 
-            states[buffIndex] = Interop.MarioTick( marioId, inputs, positionBuffers[buffIndex], normalBuffers[buffIndex], colorBuffer, uvBuffer );
+            states[buffIndex] = Interop.MarioTick( marioId, inputs, positionBuffers[buffIndex], normalBuffers[buffIndex], colorBuffer, uvBuffer, out numTrianglesUsed );
+
+            if (previousNumTrianglesUsed != numTrianglesUsed)
+            {
+                lerpPositionBuffer = new Vector3[3 * Interop.SM64_GEO_MAX_TRIANGLES];
+                lerpNormalBuffer = new Vector3[3 * Interop.SM64_GEO_MAX_TRIANGLES];
+            }
+            previousNumTrianglesUsed = numTrianglesUsed;
 
             for ( int i = 0; i < colorBuffer.Length; ++i )
                 colorBufferColors[i] = new Color( colorBuffer[i].x, colorBuffer[i].y, colorBuffer[i].z, 1 );
@@ -145,7 +154,7 @@ namespace LibSM64
             float t = (Time.time - Time.fixedTime) / Time.fixedDeltaTime;
             int j = 1 - buffIndex;
 
-            for( int i = 0; i < lerpPositionBuffer.Length; ++i )
+            for( int i = 0; i < numTrianglesUsed * 3; ++i )
             {
                 lerpPositionBuffer[i] = Vector3.LerpUnclamped( positionBuffers[buffIndex][i], positionBuffers[j][i], t);
                 lerpNormalBuffer[i] = Vector3.LerpUnclamped( normalBuffers[buffIndex][i], normalBuffers[j][i], t);

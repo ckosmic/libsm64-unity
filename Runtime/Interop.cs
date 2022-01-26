@@ -205,7 +205,7 @@ namespace LibSM64
             return sm64_mario_create( (short)marioPos.x, (short)marioPos.y, (short)marioPos.z, (short)marioEulerAngles.x, (short)marioEulerAngles.y, (short)marioEulerAngles.z );
         }
 
-        public static SM64MarioState MarioTick( uint marioId, SM64MarioInputs inputs, Vector3[] positionBuffer, Vector3[] normalBuffer, Vector3[] colorBuffer, Vector2[] uvBuffer )
+        public static SM64MarioState MarioTick( uint marioId, SM64MarioInputs inputs, Vector3[] positionBuffer, Vector3[] normalBuffer, Vector3[] colorBuffer, Vector2[] uvBuffer, out ushort numTrianglesUsed )
         {
             SM64MarioState outState = new SM64MarioState();
 
@@ -219,10 +219,12 @@ namespace LibSM64
                 position = posHandle.AddrOfPinnedObject(),
                 normal = normHandle.AddrOfPinnedObject(),
                 color = colorHandle.AddrOfPinnedObject(),
-                uv = uvHandle.AddrOfPinnedObject()
+                uv = uvHandle.AddrOfPinnedObject(),
             };
 
             sm64_mario_tick( marioId, ref inputs, ref outState, ref buff );
+
+            numTrianglesUsed = buff.numTrianglesUsed;
 
             posHandle.Free();
             normHandle.Free();
