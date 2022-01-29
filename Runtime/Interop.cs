@@ -107,6 +107,26 @@ namespace LibSM64
             public IntPtr surfaces;
         }
 
+        [StructLayout(LayoutKind.Sequential)]
+        struct SM64MarioColorGroup
+        {
+            [MarshalAsAttribute(UnmanagedType.ByValArray, SizeConst = 3)]
+            public byte[] shade;
+            [MarshalAsAttribute(UnmanagedType.ByValArray, SizeConst = 3)]
+            public byte[] color;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        struct SM64MarioModelColors
+        {
+            public SM64MarioColorGroup blue;
+	        public SM64MarioColorGroup red;
+	        public SM64MarioColorGroup white;
+	        public SM64MarioColorGroup brown1;
+	        public SM64MarioColorGroup beige;
+	        public SM64MarioColorGroup brown2;
+        }
+
         [DllImport("sm64")]
         static extern void sm64_global_init( IntPtr rom, IntPtr outTexture, IntPtr debugPrintFunctionPtr );
         [DllImport("sm64")]
@@ -132,6 +152,8 @@ namespace LibSM64
         static extern void sm64_set_mario_velocity(float velX, float velY, float velZ);
         [DllImport("sm64")]
         static extern void sm64_set_mario_forward_velocity(float vel);
+        [DllImport("sm64")]
+        static extern void sm64_set_mario_colors(ref SM64MarioModelColors modelColors);
 
         [DllImport("sm64")]
         static extern uint sm64_surface_object_create( ref SM64SurfaceObject surfaceObject );
@@ -268,6 +290,30 @@ namespace LibSM64
         {
             velocity *= SCALE_FACTOR;
             sm64_set_mario_forward_velocity(velocity);
+        }
+
+        public static void MarioSetColors(Color32[] unityColors)
+        {
+            byte[][] colorBytes = new byte[12][];
+            for (int i = 0; i < unityColors.Length; i++)
+            {
+                colorBytes[i] = new byte[3];
+                colorBytes[i][0] = unityColors[i].r;
+                colorBytes[i][1] = unityColors[i].g;
+                colorBytes[i][2] = unityColors[i].b;
+            }
+
+            SM64MarioModelColors colors = new SM64MarioModelColors
+            { 
+                blue = new SM64MarioColorGroup { shade = colorBytes[0], color = colorBytes[1] },
+                red = new SM64MarioColorGroup { shade = colorBytes[2], color = colorBytes[3] },
+                white = new SM64MarioColorGroup { shade = colorBytes[4], color = colorBytes[5] },
+                brown1 = new SM64MarioColorGroup { shade = colorBytes[6], color = colorBytes[7] },
+                beige = new SM64MarioColorGroup { shade = colorBytes[8], color = colorBytes[9] },
+                brown2 = new SM64MarioColorGroup { shade = colorBytes[10], color = colorBytes[11] },
+            };
+
+            sm64_set_mario_colors(ref colors);
         }
 
         public static uint SurfaceObjectCreate( Vector3 position, Quaternion rotation, SM64Surface[] surfaces )

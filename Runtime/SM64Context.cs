@@ -71,7 +71,7 @@ namespace LibSM64
 
         static public void RefreshStaticTerrain()
         {
-            Interop.StaticSurfacesLoad( Utils.GetAllStaticSurfaces());
+            Interop.StaticSurfacesLoad( Utils.GetAllStaticSurfaces() );
         }
 
         static public void RegisterMario( SM64Mario mario )

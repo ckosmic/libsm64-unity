@@ -114,6 +114,11 @@ namespace LibSM64
             Interop.MarioSetForwardVelocity(velocity);
         }
 
+        public void SetColors(Color32[] unityColors)
+        {
+            Interop.MarioSetColors(unityColors);
+        }
+
         public void contextFixedUpdate()
         {
             var inputs = new Interop.SM64MarioInputs();
