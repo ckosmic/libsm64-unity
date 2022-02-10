@@ -21,15 +21,15 @@ namespace LibSM64
         int buffIndex;
         Interop.SM64MarioState[] states;
 
-        GameObject marioRendererObject;
         Mesh marioMesh;
         uint marioId;
 
-        private Vector3 previousVelocity;
-        private ushort previousNumTrianglesUsed = 0;
+        Vector3 previousVelocity;
+        ushort previousNumTrianglesUsed = 0;
 
         public Action MarioStartedMoving;
         public Action MarioStoppedMoving;
+        public GameObject marioRendererObject;
 
         public void Initialize()
         {
@@ -84,8 +84,8 @@ namespace LibSM64
 
             if( Interop.isGlobalInit )
             {
-                SM64Context.UnregisterMario( this );
                 Interop.MarioDelete( marioId );
+                SM64Context.UnregisterMario(this);
             }
         }
 
@@ -96,6 +96,7 @@ namespace LibSM64
 
         public void SetPosition(Vector3 position)
         {
+            transform.position = position;
             Interop.MarioSetPosition(position);
         }
 

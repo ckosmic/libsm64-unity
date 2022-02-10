@@ -50,13 +50,20 @@ namespace LibSM64
             Interop.GlobalInit(File.ReadAllBytes(romPath));
         }
 
-        static public void Terminate() {
+        static public void Terminate()
+        {
             Interop.GlobalTerminate();
             s_instance = null;
         }
 
-        static public void SetScaleFactor(float scale) {
+        static public void SetScaleFactor(float scale)
+        {
             Interop.SCALE_FACTOR = scale * 100.0f;
+        }
+
+        static public float GetScaleFactor()
+        {
+            return Interop.SCALE_FACTOR / 100.0f;
         }
 
         static void ensureInstanceExists()
@@ -66,6 +73,7 @@ namespace LibSM64
                 var contextGo = new GameObject( "SM64_CONTEXT" );
                 contextGo.hideFlags |= HideFlags.HideInHierarchy;
                 s_instance = contextGo.AddComponent<SM64Context>();
+                DontDestroyOnLoad(contextGo);
             }
         }
 

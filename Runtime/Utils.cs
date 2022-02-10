@@ -46,7 +46,10 @@ namespace LibSM64
 
             foreach( var obj in GameObject.FindObjectsOfType<SM64StaticTerrain>())
             {
-                Mesh objMesh = null;
+                if (!obj.enabled) continue;
+
+                Mesh objMesh;
+                Vector3 meshScale = Vector3.one;
                 if (obj.GetComponent<MeshCollider>() != null)
                 {
                     objMesh = obj.GetComponent<MeshCollider>().sharedMesh;
@@ -56,13 +59,14 @@ namespace LibSM64
                     if (_unityCubeMesh == null)
                         _unityCubeMesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
                     objMesh = _unityCubeMesh;
+                    meshScale = obj.GetComponent<BoxCollider>().size;
                 }
                 else
                 {
                     objMesh = obj.GetComponent<MeshFilter>().sharedMesh;
                 }
                 if (objMesh != null)
-                    transformAndGetSurfaces( surfaces, objMesh, obj.SurfaceType, obj.TerrainType, x => obj.transform.TransformPoint( x ));
+                    transformAndGetSurfaces( surfaces, objMesh, obj.SurfaceType, obj.TerrainType, x => obj.transform.TransformPoint(Vector3.Scale(meshScale, x)));
             }
 
             return surfaces.ToArray();
