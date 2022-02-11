@@ -43,8 +43,8 @@ namespace LibSM64
         static public Interop.SM64Surface[] GetAllStaticSurfaces()
         {
             var surfaces = new List<Interop.SM64Surface>();
-
-            foreach( var obj in GameObject.FindObjectsOfType<SM64StaticTerrain>())
+            
+            foreach( var obj in Resources.FindObjectsOfTypeAll<SM64StaticTerrain>())
             {
                 if (!obj.enabled) continue;
 
@@ -61,14 +61,18 @@ namespace LibSM64
                     objMesh = _unityCubeMesh;
                     meshScale = obj.GetComponent<BoxCollider>().size;
                 }
-                else
+                else if (obj.GetComponent<MeshFilter>() != null)
                 {
                     objMesh = obj.GetComponent<MeshFilter>().sharedMesh;
+                }
+                else
+                {
+                    continue;
                 }
                 if (objMesh != null)
                     transformAndGetSurfaces( surfaces, objMesh, obj.SurfaceType, obj.TerrainType, x => obj.transform.TransformPoint(Vector3.Scale(meshScale, x)));
             }
-
+            
             return surfaces.ToArray();
         }
     }

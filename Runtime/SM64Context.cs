@@ -19,25 +19,34 @@ namespace LibSM64
 
         void Update()
         {
-            foreach( var o in _surfaceObjects )
-                o.contextUpdate();
+            foreach ( var o in _surfaceObjects )
+                if(IsActiveInHierarchyAndEnabled(o))
+                    o.contextUpdate();
 
             foreach( var o in _marios )
-                o.contextUpdate();
+                if (IsActiveInHierarchyAndEnabled(o))
+                    o.contextUpdate();
         }
 
         void FixedUpdate()
         {
             foreach( var o in _surfaceObjects )
-                o.contextFixedUpdate();
+                if (IsActiveInHierarchyAndEnabled(o))
+                    o.contextFixedUpdate();
 
             foreach( var o in _marios )
-                o.contextFixedUpdate();
+                if (IsActiveInHierarchyAndEnabled(o))
+                    o.contextFixedUpdate();
         }
 
         void OnApplicationQuit()
         {
             Terminate();
+        }
+
+        private bool IsActiveInHierarchyAndEnabled(Behaviour o)
+        {
+            return o.enabled && o.gameObject.activeInHierarchy;
         }
 
         static public void Initialize()

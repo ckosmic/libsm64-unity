@@ -28,6 +28,11 @@ namespace LibSM64
 
         private void Start()
         {
+            Initialize();
+        }
+
+        public void Initialize()
+        {
             SM64Context.RegisterSurfaceObject(this);
 
             _position = transform.position;
@@ -61,13 +66,18 @@ namespace LibSM64
             }
         }
 
-        void OnDestroy()
+        public void Terminate()
         {
             if( Interop.isGlobalInit )
             {
                 SM64Context.UnregisterSurfaceObject( this );
                 Interop.SurfaceObjectDelete( _surfaceObjectId );
             }
+        }
+
+        private void OnDestroy()
+        {
+            Terminate();
         }
 
         internal void contextFixedUpdate()

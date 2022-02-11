@@ -31,6 +31,11 @@ namespace LibSM64
         public Action MarioStoppedMoving;
         public GameObject marioRendererObject;
 
+        private void OnDestroy()
+        {
+            Terminate();
+        }
+
         public void Initialize()
         {
             SM64Context.RegisterMario( this );
@@ -91,28 +96,28 @@ namespace LibSM64
 
         public void SetAction(SM64MarioAction action)
         {
-            Interop.MarioSetAction(action);
+            Interop.MarioSetAction(marioId, action);
         }
 
         public void SetPosition(Vector3 position)
         {
             transform.position = position;
-            Interop.MarioSetPosition(position);
+            Interop.MarioSetPosition(marioId, position);
         }
 
         public void SetRotation(Quaternion rotation)
         {
-            Interop.MarioSetRotation(rotation);
+            Interop.MarioSetRotation(marioId, rotation);
         }
 
         public void SetVelocity(Vector3 velocity)
         {
-            Interop.MarioSetVelocity(velocity);
+            Interop.MarioSetVelocity(marioId, velocity);
         }
 
         public void SetFowardVelocity(float velocity)
         {
-            Interop.MarioSetForwardVelocity(velocity);
+            Interop.MarioSetForwardVelocity(marioId, velocity);
         }
 
         public void SetColors(Color32[] unityColors)
