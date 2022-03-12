@@ -12,14 +12,14 @@ namespace LibSM64
         public SM64TerrainType TerrainType { get { return terrainType; }}
         public SM64SurfaceType SurfaceType { get { return surfaceType; }}
 
-        Vector3 _position;
-        Vector3 _lastPosition;
-        Vector3 _nextPosition;
-        Quaternion _rotation;
-        Quaternion _lastRotation;
-        Quaternion _nextRotation;
-        float _lastScaleFactor;
-        uint _surfaceObjectId;
+        private Vector3 _position;
+        private Vector3 _lastPosition;
+        private Vector3 _nextPosition;
+        private Quaternion _rotation;
+        private Quaternion _lastRotation;
+        private Quaternion _nextRotation;
+        private float _lastScaleFactor;
+        private uint _surfaceObjectId;
 
         public Vector3 position     { get { return _position;     }}
         public Vector3 lastPosition { get { return _lastPosition; }}
@@ -50,9 +50,9 @@ namespace LibSM64
             }
             else if (GetComponent<BoxCollider>() != null)
             {
-                if (Utils._unityCubeMesh == null)
-                    Utils._unityCubeMesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
-                objMesh = Utils._unityCubeMesh;
+                if (Utils.unityCubeMesh == null)
+                    Utils.unityCubeMesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
+                objMesh = Utils.unityCubeMesh;
                 meshScale = GetComponent<BoxCollider>().size;
             }
             else

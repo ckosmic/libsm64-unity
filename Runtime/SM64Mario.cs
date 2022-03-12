@@ -6,26 +6,26 @@ namespace LibSM64
 {
     public class SM64Mario : MonoBehaviour
     {
-        [SerializeField] Material material = null;
+        [SerializeField] private Material material = null;
 
-        SM64InputProvider inputProvider;
+        private SM64InputProvider inputProvider;
 
-        Vector3[][] positionBuffers;
-        Vector3[][] normalBuffers;
-        Vector3[] lerpPositionBuffer;
-        Vector3[] lerpNormalBuffer;
-        Vector3[] colorBuffer;
-        Color[] colorBufferColors;
-        Vector2[] uvBuffer;
-        ushort numTrianglesUsed;
-        int buffIndex;
-        Interop.SM64MarioState[] states;
+        private Vector3[][] positionBuffers;
+        private Vector3[][] normalBuffers;
+        private Vector3[] lerpPositionBuffer;
+        private Vector3[] lerpNormalBuffer;
+        private Vector3[] colorBuffer;
+        private Color[] colorBufferColors;
+        private Vector2[] uvBuffer;
+        private ushort numTrianglesUsed;
+        private int buffIndex;
+        private Interop.SM64MarioState[] states;
 
-        Mesh marioMesh;
-        uint marioId;
+        private Mesh marioMesh;
+        private uint marioId;
 
-        Vector3 previousVelocity;
-        ushort previousNumTrianglesUsed = 0;
+        private Vector3 previousVelocity;
+        private ushort previousNumTrianglesUsed = 0;
 
         public Action MarioStartedMoving;
         public Action MarioStoppedMoving;
@@ -36,7 +36,7 @@ namespace LibSM64
             Terminate();
         }
 
-        public void Initialize()
+        public bool Initialize()
         {
             SM64Context.RegisterMario( this );
 
@@ -44,9 +44,17 @@ namespace LibSM64
             var initRot = transform.eulerAngles;
             marioId = Interop.MarioCreate( new Vector3( -initPos.x, initPos.y, initPos.z ) * Interop.SCALE_FACTOR, initRot );
 
+            if (marioId == uint.MaxValue)
+            {
+                SM64Context.UnregisterMario(this);
+                return false;
+            }
+            else
+            {
+                Debug.Log("Mario spawned outside of a surface. Deleting...");
+            }
+
             inputProvider = GetComponent<SM64InputProvider>();
-            if( inputProvider == null )
-                throw new System.Exception("Need to add an input provider component to Mario");
 
             marioRendererObject = new GameObject("MARIO");
             marioRendererObject.hideFlags |= HideFlags.HideInHierarchy;
@@ -77,6 +85,8 @@ namespace LibSM64
             marioMesh.vertices = lerpPositionBuffer;
             marioMesh.triangles = Enumerable.Range(0, 3*Interop.SM64_GEO_MAX_TRIANGLES).ToArray();
             meshFilter.sharedMesh = marioMesh;
+
+            return true;
         }
 
         public void Terminate()
@@ -125,22 +135,38 @@ namespace LibSM64
             Interop.MarioSetColors(unityColors);
         }
 
-        public void contextFixedUpdate()
+        public void RefreshInputProvider()
         {
+            inputProvider = GetComponent<SM64InputProvider>();
+        }
+
+        internal void resetScaleFactor(float oldScale)
+        {
+            SetPosition(transform.position);
+            marioRendererObject.transform.localScale = new Vector3(-1, 1, 1) / Interop.SCALE_FACTOR;
+        }
+
+        internal void contextFixedUpdate()
+        {
+            if (!enabled || !gameObject.activeInHierarchy) return;
+
             var inputs = new Interop.SM64MarioInputs();
-            var look = inputProvider.GetCameraLookDirection();
-            look.y = 0;
-            look = look.normalized;
+            if (inputProvider != null)
+            {
+                var look = inputProvider.GetCameraLookDirection();
+                look.y = 0;
+                look = look.normalized;
 
-            var joystick = inputProvider.GetJoystickAxes();
+                var joystick = inputProvider.GetJoystickAxes();
 
-            inputs.camLookX = -look.x;
-            inputs.camLookZ = look.z;
-            inputs.stickX = joystick.x;
-            inputs.stickY = -joystick.y;
-            inputs.buttonA = inputProvider.GetButtonHeld( SM64InputProvider.Button.Jump  ) ? (byte)1 : (byte)0;
-            inputs.buttonB = inputProvider.GetButtonHeld( SM64InputProvider.Button.Kick  ) ? (byte)1 : (byte)0;
-            inputs.buttonZ = inputProvider.GetButtonHeld( SM64InputProvider.Button.Stomp ) ? (byte)1 : (byte)0;
+                inputs.camLookX = -look.x;
+                inputs.camLookZ = look.z;
+                inputs.stickX = joystick.x;
+                inputs.stickY = -joystick.y;
+                inputs.buttonA = inputProvider.GetButtonHeld(SM64InputProvider.Button.Jump) ? (byte)1 : (byte)0;
+                inputs.buttonB = inputProvider.GetButtonHeld(SM64InputProvider.Button.Kick) ? (byte)1 : (byte)0;
+                inputs.buttonZ = inputProvider.GetButtonHeld(SM64InputProvider.Button.Stomp) ? (byte)1 : (byte)0;
+            }
 
             states[buffIndex] = Interop.MarioTick( marioId, inputs, positionBuffers[buffIndex], normalBuffers[buffIndex], colorBuffer, uvBuffer, out numTrianglesUsed );
 
@@ -168,8 +194,10 @@ namespace LibSM64
             buffIndex = 1 - buffIndex;
         }
 
-        public void contextUpdate()
+        internal void contextUpdate()
         {
+            if (!enabled || !gameObject.activeInHierarchy) return;
+
             float t = (Time.time - Time.fixedTime) / Time.fixedDeltaTime;
             int j = 1 - buffIndex;
 
@@ -203,7 +231,7 @@ namespace LibSM64
             return Vector3.zero;
         }
 
-        void OnDrawGizmos()
+        private void OnDrawGizmos()
         {
             if( !Application.isPlaying )
             {

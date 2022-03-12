@@ -5,11 +5,11 @@ using UnityEngine;
 
 namespace LibSM64
 {
-    static internal class Utils
+    internal static class Utils
     {
-        internal static Mesh _unityCubeMesh = null;
+        internal static Mesh unityCubeMesh = null;
 
-        static void transformAndGetSurfaces( List<Interop.SM64Surface> outSurfaces, Mesh mesh, SM64SurfaceType surfaceType, SM64TerrainType terrainType, Func<Vector3,Vector3> transformFunc )
+        private static void transformAndGetSurfaces( List<Interop.SM64Surface> outSurfaces, Mesh mesh, SM64SurfaceType surfaceType, SM64TerrainType terrainType, Func<Vector3,Vector3> transformFunc )
         {
             var tris = mesh.GetTriangles(0);
             var vertices = mesh.vertices.Select(transformFunc).ToArray();
@@ -33,14 +33,14 @@ namespace LibSM64
             }
         }
 
-        static public Interop.SM64Surface[] GetSurfacesForMesh( Vector3 scale, Mesh mesh, SM64SurfaceType surfaceType, SM64TerrainType terrainType )
+        public static Interop.SM64Surface[] GetSurfacesForMesh( Vector3 scale, Mesh mesh, SM64SurfaceType surfaceType, SM64TerrainType terrainType )
         {
             var surfaces = new List<Interop.SM64Surface>();
             transformAndGetSurfaces( surfaces, mesh, surfaceType, terrainType, x => Vector3.Scale( scale, x ));
             return surfaces.ToArray();
         }
 
-        static public Interop.SM64Surface[] GetAllStaticSurfaces()
+        public static Interop.SM64Surface[] GetAllStaticSurfaces()
         {
             var surfaces = new List<Interop.SM64Surface>();
             
@@ -56,9 +56,9 @@ namespace LibSM64
                 }
                 else if (obj.GetComponent<BoxCollider>() != null)
                 {
-                    if (_unityCubeMesh == null)
-                        _unityCubeMesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
-                    objMesh = _unityCubeMesh;
+                    if (unityCubeMesh == null)
+                        unityCubeMesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
+                    objMesh = unityCubeMesh;
                     meshScale = obj.GetComponent<BoxCollider>().size;
                 }
                 else if (obj.GetComponent<MeshFilter>() != null)
